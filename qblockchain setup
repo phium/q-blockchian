@@ -1,0 +1,76 @@
+#네트워크 업뎃
+`sudo apt update`
+`sudo apt upgrade`
+`apt install docker-compose`
+
+
+
+# 도커 설치
+`sudo apt-get update && sudo apt install jq && sudo apt install apt-transport-https ca-certificates curl software-properties-common -y && curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - && sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" && sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin && sudo apt-get install docker-compose-plugin`
+
+
+
+#q블록체인 설치
+`git clone https://gitlab.com/q-dev/testnet-public-tools`
+
+
+#폴더로 위치한 후 키만들기 및 설정
+`cd testnet-public-tools/testnet-validator/`
+`mkdir keystore`
+`echo YOURPASSWORD > keystore/pwd.txt`
+
+
+#testnet-public-tools/testnet-validator폴더에서 세팅
+`docker-compose run --rm --entrypoint "geth account new --datadir=/data --password=/data/keystore/pwd.txt" testnet-validator-node`
+
+
+
+#컨픽이랑env
+`cp .env.example .env`
+`nano .env`
+
+#.env 파일에 갖고 있는 정보 기입
+
+
+#파일열어서 벨리데이터 등록 및 복붙, ethstats=에 있는부분 itn에서 얻은 stats.qtestnet 이름 등록
+`nano docker-compose.yaml`
+`version: "3"
+
+`services:
+  testnet-validator-node:
+    image: $QCLIENT_IMAGE
+    entrypoint: [
+      "geth",
+      "--testnet",
+      "--datadir=/data",
+      "--syncmode=full",
+      "--ethstats=VALIDATOR_STATS_ID:qstats-testnet@stats.qtestnet.org",
+      "--whitelist=3699041=0xabbe19ba455511260381aaa7aa606b2fec2de762b9591433bbb379894aba55c1",
+      "--bootnodes=$BOOTNODE1_ADDR,$BOOTNODE2_ADDR,$BOOTNODE3_ADDR",
+      "--verbosity=3",
+      "--nat=extip:$IP",
+      "--port=$EXT_PORT",
+      "--unlock=$ADDRESS",
+      "--password=/data/keystore/pwd.txt",
+      "--mine",
+      "--miner.threads=1",
+      "--miner.gasprice=1",
+      "--rpc.allow-unprotected-txs"
+    ]
+    volumes:
+      - ./keystore:/data/keystore
+      - ./additional:/data/additional
+      - testnet-validator-node-data:/data
+    ports:
+      - $EXT_PORT:$EXT_PORT
+      - $EXT_PORT:$EXT_PORT/udp
+    restart: unless-stopped
+volumes:
+  testnet-validator-node-data:`
+
+
+
+
+#실행
+`docker-compose up -d`
+  
